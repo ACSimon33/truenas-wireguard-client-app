@@ -4,8 +4,9 @@ Generic WireGuard client container for running a persistent site-to-site VPN
 endpoint as a TrueNAS SCALE Custom App.
 
 The image is intentionally small: it renders a `wg-quick` config from
-environment variables, brings up one WireGuard interface, optionally refreshes a
-dynamic DNS endpoint, and removes the interface when the app is stopped.
+environment variables, stores changed configs as timestamped history, brings up
+one WireGuard interface, optionally refreshes a dynamic DNS endpoint, and
+removes the interface when the app is stopped.
 
 ## Why this exists
 
@@ -32,7 +33,7 @@ trust.
 
 ## Environment variables
 
-Required when not mounting a full config at `/config/wg0.conf`:
+Required:
 
 | Variable | Example | Description |
 | --- | --- | --- |
@@ -52,6 +53,7 @@ Optional:
 | `WG_MTU` | empty | Optional MTU override. |
 | `WG_TABLE` | empty | Optional routing table override. |
 | `WG_FWMARK` | empty | Optional WireGuard fwmark. |
+| `CONFIG_HISTORY_DIR` | `/config` | Directory for timestamped generated config history. |
 | `WG_REPLACE_EXISTING` | `false` | Set to `true` to tear down an already-existing interface with the same `WG_IF` during startup. |
 | `PEER_PRESHARED_KEY` | empty | Optional preshared key. |
 | `PEER_PERSISTENT_KEEPALIVE` | `25` | Keepalive interval in seconds. |
@@ -63,6 +65,12 @@ Optional:
 
 Use a `WG_IF` name that this app owns. If another host service already uses
 `wg0`, either stop it first or set `WG_IF` to a different interface name.
+
+On each startup, the app renders a config from the environment. Changed configs
+are written to `${CONFIG_HISTORY_DIR}/${WG_IF}-YYYYMMDDTHHMMSSZ.conf`, and
+`${CONFIG_HISTORY_DIR}/${WG_IF}.conf` is updated as a symlink to the newest
+version. If the rendered config matches the newest saved version, no duplicate
+history file is created.
 
 Secret file alternatives are also supported for key material:
 
