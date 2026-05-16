@@ -24,12 +24,24 @@ Custom App with:
 - Privileged enabled.
 - Restart Policy set to `Unless Stopped` or `Always`.
 - No port forwarding.
+- A persistent volume mounted at `/config` is recommended.
 - Environment variables from the table below.
 
 Privileged mode gives the container broad host access. That is necessary for the
 simple Custom App setup because WireGuard, routes, iptables, and sysctl changes
 must happen in the host network namespace. Only run images you built yourself or
 trust.
+
+## Persistent config volume
+
+Mounting a TrueNAS dataset or app storage volume at `/config` is recommended,
+even when you configure the app only through environment variables.
+
+The app does not require this mount to start. Its active WireGuard config is
+generated into `/etc/wireguard` at runtime. A persistent `/config` mount is still
+useful because it gives you a stable place to keep config snapshots, notes, or a
+complete `wg0.conf` if you later decide to manage the WireGuard config as a
+file.
 
 ## Environment variables
 
