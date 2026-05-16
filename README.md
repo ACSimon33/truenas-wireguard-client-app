@@ -1,5 +1,9 @@
 # TrueNAS WireGuard Client App
 
+[![CI][ci-badge]][ci-link]
+[![Release][release-badge]][release-link]
+[![Docker Hub][docker-badge]][docker-link]
+
 Generic WireGuard client container for running a persistent site-to-site VPN
 endpoint as a TrueNAS SCALE Custom App.
 
@@ -51,7 +55,7 @@ Required:
 | --- | --- | --- |
 | `WG_ADDRESS` | `10.255.0.2/32` | WireGuard address for this TrueNAS client. |
 | `WG_PRIVATE_KEY` | `...` | Private key for this client. |
-| `PEER_PUBLIC_KEY` | `...` | Public key of the remote WireGuard peer, for example OPNsense. |
+| `PEER_PUBLIC_KEY` | `...` | Public key of the remote WireGuard peer. |
 | `PEER_ENDPOINT` | `wg.example.com:51820` | Remote endpoint hostname/IP and UDP port. |
 | `PEER_ALLOWED_IPS` | `172.20.10.0/24,10.255.0.1/32` | Routes sent through the tunnel. |
 
@@ -127,6 +131,13 @@ POST_UP=iptables -A FORWARD -i wg0 -o br0 -j ACCEPT; iptables -A FORWARD -i br0 
 POST_DOWN=iptables -D FORWARD -i wg0 -o br0 -j ACCEPT; iptables -D FORWARD -i br0 -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s 172.20.10.0/24 -o br0 -j MASQUERADE; iptables -t nat -D POSTROUTING -s 10.255.0.0/24 -o br0 -j MASQUERADE
 ```
 
-On OPNsense, the peer for TrueNAS B must include routes that match what you want
-to reach behind Site B, for example `10.255.0.2/32` and, if forwarding the whole
-LAN, `172.21.20.0/24`.
+On the remote WireGuard peer, allow routes that match what you want to reach
+behind Site B, for example `10.255.0.2/32` and, if forwarding the whole LAN,
+`172.21.20.0/24`.
+
+[ci-badge]: https://github.com/ACSimon33/truenas-wireguard-client-app/actions/workflows/lint.yml/badge.svg
+[ci-link]: https://github.com/ACSimon33/truenas-wireguard-client-app/actions/workflows/lint.yml
+[docker-badge]: https://img.shields.io/docker/v/acsimon33/truenas-wireguard-client-app/latest?label=docker%20hub&color=2496ED&logo=docker&logoColor=white
+[docker-link]: https://hub.docker.com/r/acsimon33/truenas-wireguard-client-app/tags
+[release-badge]: https://img.shields.io/github/v/release/ACSimon33/truenas-wireguard-client-app?sort=semver
+[release-link]: https://github.com/ACSimon33/truenas-wireguard-client-app/releases/latest
