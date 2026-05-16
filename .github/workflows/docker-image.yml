@@ -1,9 +1,14 @@
+---
+
 name: Docker Image
 
-on:
+"on":
   push:
     branches:
       - main
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 permissions:
@@ -13,6 +18,10 @@ jobs:
   build-and-push:
     name: Build and push
     runs-on: ubuntu-latest
+    env:
+      IS_NOT_RELEASE: ${{ github.event_name != 'release' }}
+      IS_RELEASE: ${{ github.event_name == 'release' }}
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
 
     steps:
       - name: Check out repository
@@ -37,11 +46,15 @@ jobs:
           images: >-
             ${{
               vars.DOCKERHUB_REPOSITORY ||
-              format('{0}/truenas-wireguard-client-app', secrets.DOCKERHUB_USERNAME)
+              format(
+                '{0}/truenas-wireguard-client-app',
+                secrets.DOCKERHUB_USERNAME
+              )
             }}
           tags: |
             type=raw,value=latest
-            type=sha,prefix=sha-
+            type=raw,value=${{ env.RELEASE_TAG }},enable=${{ env.IS_RELEASE }}
+            type=sha,prefix=sha-,enable=${{ env.IS_NOT_RELEASE }}
 
       - name: Prepare build info
         id: build-info
@@ -58,6 +71,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
+          build-args: |-
             BUILD_DATE=${{ steps.build-info.outputs.created }}
             VCS_REF=${{ steps.build-info.outputs.revision }}

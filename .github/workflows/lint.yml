@@ -1,6 +1,8 @@
+---
+
 name: Lint
 
-on:
+"on":
   pull_request:
   push:
     branches:
@@ -26,6 +28,17 @@ jobs:
 
       - name: Install pre-commit
         run: python3 -m pip install pre-commit
+
+      - name: Install hadolint
+        env:
+          HADOLINT_VERSION: v2.14.0
+        run: |
+          release_url="https://github.com/hadolint/hadolint/releases/download"
+          curl -sSL \
+            "${release_url}/${HADOLINT_VERSION}/hadolint-Linux-x86_64" \
+            -o hadolint
+          chmod +x hadolint
+          sudo mv hadolint /usr/local/bin/hadolint
 
       - name: Run pre-commit
         run: pre-commit run --all-files

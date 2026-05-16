@@ -1,3 +1,5 @@
+---
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -6,11 +8,8 @@ repos:
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-illegal-windows-names
-      - id: check-json
       - id: check-merge-conflict
       - id: check-symlinks
-      - id: check-toml
-      - id: check-yaml
       - id: destroyed-symlinks
       - id: detect-private-key
       - id: end-of-file-fixer
@@ -19,15 +18,27 @@ repos:
       - id: trailing-whitespace
         args: ["--markdown-linebreak-ext=md"]
 
-  - repo: local
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
     hooks:
       - id: shellcheck
-        name: shellcheck
-        language: docker_image
-        entry: koalaman/shellcheck:v0.11.0
-        types: [shell]
+  - repo: https://github.com/maxwinterstein/shfmt-py
+    rev: v3.12.0.1
+    hooks:
+      - id: shfmt
+  - repo: https://github.com/PFCCLab/yamlfmt-pre-commit-mirror.git
+    rev: v0.21.0
+    hooks:
+      - id: yamlfmt
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [--strict]
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.14.0
+    hooks:
       - id: hadolint
-        name: hadolint
-        language: docker_image
-        entry: hadolint/hadolint:v2.14.0
+        types: [file]
         files: ^Dockerfile$
