@@ -1,7 +1,8 @@
 ---
+
 name: Docker Image
 
-on:
+"on":
   push:
     branches:
       - main
@@ -38,7 +39,10 @@ jobs:
           images: >-
             ${{
               vars.DOCKERHUB_REPOSITORY ||
-              format('{0}/truenas-wireguard-client-app', secrets.DOCKERHUB_USERNAME)
+              format(
+                '{0}/truenas-wireguard-client-app',
+                secrets.DOCKERHUB_USERNAME
+              )
             }}
           tags: |
             type=raw,value=latest

@@ -1,7 +1,7 @@
-# Set default behavior to automatically normalize line endings
-* text=auto
+# Set default behavior to automatically normalize line endings as LF
+* text=auto eol=lf
 
-# Shell scripts must use Unix line endings (LF)
+# Shell scripts must use Unix line endings
 *.sh text eol=lf
 
 # Use Unix line endings for YAML files

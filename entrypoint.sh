@@ -150,12 +150,10 @@ if [[ "${RESOLVE_INTERVAL}" != "0" ]]; then
   require_value PEER_ENDPOINT "${PEER_ENDPOINT:-}"
 
   log "Refreshing peer endpoint DNS every ${RESOLVE_INTERVAL} seconds"
-  ( 
-    while true; do
-      sleep "${RESOLVE_INTERVAL}"
-      wg set "${WG_IF}" peer "${PEER_PUBLIC_KEY}" endpoint "${PEER_ENDPOINT}" || true
-    done
-  ) &
+  while true; do
+    sleep "${RESOLVE_INTERVAL}"
+    wg set "${WG_IF}" peer "${PEER_PUBLIC_KEY}" endpoint "${PEER_ENDPOINT}" || true
+  done &
 fi
 
 log "WireGuard is up"
