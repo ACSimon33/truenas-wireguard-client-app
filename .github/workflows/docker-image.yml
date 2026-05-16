@@ -18,6 +18,10 @@ jobs:
   build-and-push:
     name: Build and push
     runs-on: ubuntu-latest
+    env:
+      IS_NOT_RELEASE: ${{ github.event_name != 'release' }}
+      IS_RELEASE: ${{ github.event_name == 'release' }}
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
 
     steps:
       - name: Check out repository
@@ -49,8 +53,8 @@ jobs:
             }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ github.event.release.tag_name || 'release-tag' }},enable=${{ github.event_name == 'release' }}
-            type=sha,prefix=sha-,enable=${{ github.event_name != 'release' }}
+            type=raw,value=${{ env.RELEASE_TAG }},enable=${{ env.IS_RELEASE }}
+            type=sha,prefix=sha-,enable=${{ env.IS_NOT_RELEASE }}
 
       - name: Prepare build info
         id: build-info
