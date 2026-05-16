@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# Entrypoint for the TrueNAS WireGuard client container.
+#
+# Startup flow:
+# 1. Read WireGuard settings from environment variables.
+# 2. Render a fresh wg-quick config from those values into a temporary file.
+# 3. Compare that render with the newest saved config in CONFIG_HISTORY_DIR.
+# 4. Keep the existing history unchanged if the config is identical.
+# 5. Store changed configs as timestamped files and update WG_IF.conf symlink.
+# 6. Copy the selected saved config to CONFIG_DIR for wg-quick to consume.
+#
+# CONFIG_HISTORY_DIR is persistent history, usually /config. CONFIG_DIR is the
+# runtime WireGuard directory, usually /etc/wireguard.
+
 log() {
   printf '[wireguard-client] %s\n' "$*"
 }
@@ -8,24 +21,6 @@ log() {
 die() {
   log "ERROR: $*"
   exit 1
-}
-
-read_secret() {
-  local name="$1"
-  local file_name="${name}_FILE"
-  local value="${!name:-}"
-  local file_value="${!file_name:-}"
-
-  if [[ -n "${value}" && -n "${file_value}" ]]; then
-    die "Set either ${name} or ${file_name}, not both"
-  fi
-
-  if [[ -n "${file_value}" ]]; then
-    [[ -r "${file_value}" ]] || die "${file_name} points to an unreadable file: ${file_value}"
-    value="$(< "${file_value}")"
-  fi
-
-  printf '%s' "${value}"
 }
 
 require_value() {
@@ -41,6 +36,7 @@ trim() {
   printf '%s' "${value}"
 }
 
+# Convert semicolon or newline separated hook commands into wg-quick lines.
 emit_hook_lines() {
   local hook_name="$1"
   local raw_value="$2"
@@ -66,6 +62,7 @@ append_optional() {
   return 0
 }
 
+# Write the exact wg-quick config represented by the current environment.
 render_config() {
   local output_file="$1"
 
@@ -93,6 +90,7 @@ render_config() {
   chmod 600 "${output_file}"
 }
 
+# Return an unused timestamped history path, adding a suffix for same-second runs.
 next_config_path() {
   local timestamp
   local path
@@ -110,6 +108,7 @@ next_config_path() {
   printf '%s' "${path}"
 }
 
+# Make WG_IF.conf a relative symlink to the newest timestamped config.
 point_latest_link() {
   local config_path="$1"
   local link_target
@@ -119,6 +118,7 @@ point_latest_link() {
   [[ -L "${LATEST_CONFIG_LINK}" ]] || die "Failed to create symlink ${LATEST_CONFIG_LINK}"
 }
 
+# Keep wg-quick isolated from symlink/history mechanics at runtime.
 copy_runtime_config() {
   local config_path="$1"
 
@@ -126,6 +126,7 @@ copy_runtime_config() {
   chmod 600 "${RUNTIME_CONFIG}"
 }
 
+# Save a new history file only when the rendered config differs from latest.
 persist_rendered_config() {
   local rendered_config="$1"
   local existing_config=""
@@ -180,14 +181,13 @@ RUNTIME_CONFIG="${CONFIG_DIR}/${WG_IF}.conf"
 CONFIG_HISTORY_DIR="${CONFIG_HISTORY_DIR:-/config}"
 LATEST_CONFIG_LINK="${CONFIG_HISTORY_DIR}/${WG_IF}.conf"
 
-WG_PRIVATE_KEY="$(read_secret WG_PRIVATE_KEY)"
-PEER_PUBLIC_KEY="$(read_secret PEER_PUBLIC_KEY)"
-PEER_PRESHARED_KEY="$(read_secret PEER_PRESHARED_KEY)"
-
 mkdir -p "${CONFIG_DIR}" "${CONFIG_HISTORY_DIR}"
 chmod 700 "${CONFIG_DIR}" "${CONFIG_HISTORY_DIR}"
 
 WG_ADDRESS="${WG_ADDRESS:-}"
+WG_PRIVATE_KEY="${WG_PRIVATE_KEY:-}"
+PEER_PUBLIC_KEY="${PEER_PUBLIC_KEY:-}"
+PEER_PRESHARED_KEY="${PEER_PRESHARED_KEY:-}"
 PEER_ENDPOINT="${PEER_ENDPOINT:-}"
 PEER_ALLOWED_IPS="${PEER_ALLOWED_IPS:-}"
 
@@ -197,6 +197,8 @@ require_value PEER_PUBLIC_KEY "${PEER_PUBLIC_KEY}"
 require_value PEER_ENDPOINT "${PEER_ENDPOINT}"
 require_value PEER_ALLOWED_IPS "${PEER_ALLOWED_IPS}"
 
+# Use a temporary cleanup trap until the rendered config is persisted. The
+# runtime cleanup trap is installed later, after wg-quick is ready to start.
 TMP_CONFIG="$(mktemp)"
 trap '[[ -z "${TMP_CONFIG:-}" ]] || rm -f "${TMP_CONFIG}"' EXIT
 

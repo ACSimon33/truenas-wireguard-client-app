@@ -72,12 +72,6 @@ are written to `${CONFIG_HISTORY_DIR}/${WG_IF}-YYYYMMDDTHHMMSSZ.conf`, and
 version. If the rendered config matches the newest saved version, no duplicate
 history file is created.
 
-Secret file alternatives are also supported for key material:
-
-- `WG_PRIVATE_KEY_FILE`
-- `PEER_PUBLIC_KEY_FILE`
-- `PEER_PRESHARED_KEY_FILE`
-
 ## Example for the site layout
 
 Assumptions:
