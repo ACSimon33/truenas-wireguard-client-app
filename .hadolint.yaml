@@ -1,0 +1,6 @@
+failure-threshold: warning
+ignored:
+  # Debian package pinning would make routine security rebuilds harder here.
+  - DL3008
+  # This container needs root for WireGuard, iptables, and sysctl operations.
+  - DL3002

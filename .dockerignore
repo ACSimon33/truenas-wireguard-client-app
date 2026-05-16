@@ -1,0 +1,15 @@
+.git
+.github
+.pre-commit-config.yaml
+.dockerignore
+.editorconfig
+.gitattributes
+.hadolint.yaml
+PLAN.md
+README.md
+LICENSE
+docs
+scripts/build-image.ps1
+scripts/build-image.sh
+scripts/lint.ps1
+scripts/lint.sh
