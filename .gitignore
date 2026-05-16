@@ -1,0 +1,10 @@
+# ignore hidden files
+.*
+!.github/
+!.dockerignore
+!.editorconfig
+!.gitattributes
+!.gitignore
+!.hadolint.yaml
+!.pre-commit-config.yaml
+!.yamlfmt.yml

@@ -22,7 +22,7 @@ read_secret() {
 
   if [[ -n "${file_value}" ]]; then
     [[ -r "${file_value}" ]] || die "${file_name} points to an unreadable file: ${file_value}"
-    value="$(<"${file_value}")"
+    value="$(< "${file_value}")"
   fi
 
   printf '%s' "${value}"
@@ -124,16 +124,16 @@ cleanup() {
 
   trap - EXIT INT TERM
   log "Stopping ${WG_IF}"
-  wg-quick down "${WG_IF}" >/dev/null 2>&1 || true
+  wg-quick down "${WG_IF}" > /dev/null 2>&1 || true
   exit "${exit_code}"
 }
 
 trap cleanup EXIT INT TERM
 
-if ip link show "${WG_IF}" >/dev/null 2>&1; then
+if ip link show "${WG_IF}" > /dev/null 2>&1; then
   if [[ "${WG_REPLACE_EXISTING:-false}" == "true" ]]; then
     log "Interface ${WG_IF} already exists; attempting cleanup before startup"
-    wg-quick down "${WG_IF}" >/dev/null 2>&1 || ip link delete "${WG_IF}" >/dev/null 2>&1 || true
+    wg-quick down "${WG_IF}" > /dev/null 2>&1 || ip link delete "${WG_IF}" > /dev/null 2>&1 || true
   else
     die "Interface ${WG_IF} already exists. Stop the existing owner, choose another WG_IF, or set WG_REPLACE_EXISTING=true."
   fi
@@ -150,7 +150,7 @@ if [[ "${RESOLVE_INTERVAL}" != "0" ]]; then
   require_value PEER_ENDPOINT "${PEER_ENDPOINT:-}"
 
   log "Refreshing peer endpoint DNS every ${RESOLVE_INTERVAL} seconds"
-  (
+  ( 
     while true; do
       sleep "${RESOLVE_INTERVAL}"
       wg set "${WG_IF}" peer "${PEER_PUBLIC_KEY}" endpoint "${PEER_ENDPOINT}" || true
